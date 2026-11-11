@@ -152,7 +152,8 @@ for _, name in ipairs(NYZUL_NMS) do NYZUL_NM_SET[name] = true end
 -- DAT-based NM lookup
 -------------------------------------------------------------------------------
 local NYZUL_DATS = { 'ROM4\\1\\76.DAT' }
-local FFXI_PATH  = 'C:\\Program Files (x86)\\PlayOnline\\SquareEnix\\FINAL FANTASY XI\\'
+local FFXI_PATH  = windower.ffxi_path or 'C:\\Program Files (x86)\\PlayOnline\\SquareEnix\\FINAL FANTASY XI\\'
+if not FFXI_PATH:match('[\\/]$') then FFXI_PATH = FFXI_PATH .. '\\' end
 
 local nm_dat_indices = nil
 
@@ -1280,7 +1281,7 @@ solver_activate_next = function()
         if perm then
             local order = {}
             for i, lamp_pos in ipairs(perm) do
-                order[i] = get_lamp_letter(solver_lamps[lamp_pos].index)
+                if solver_lamps[lamp_pos] then order[i] = get_lamp_letter(solver_lamps[lamp_pos].index) end
             end
             order_str = ' (order: ' .. table.concat(order, ' -> ') .. ')'
         end
@@ -1417,6 +1418,9 @@ local function reset_lamps()
     specified_enemies_list = {}
     ws_cache.mobs = {}
     ws_cache.last_refresh = 0
+    solver_known_prefix = {}
+    lamp_unlit_set = {}
+    solver_step_clicks = {}
     clear_check_cache()
     for k in pairs(tLamps) do
         tLamps[k] = {}
@@ -3171,6 +3175,9 @@ local function handle_nyzul_text(original)
                             solver_perm_idx = 0
                             solver_step = 0
                             solver_wait_time = 0
+                            solver_known_prefix = {}
+                            lamp_unlit_set = {}
+                            solver_step_clicks = {}
                             solver_active = true
                             objectiveCompleted = false
                             windower.add_to_chat(200, ('Genie SOLVER: Found %d lamps. %d permutations to try. Starting...'):format(
@@ -3444,10 +3451,11 @@ windower.register_event('prerender', function()
 
     if solver_active and solver_wait_time > 0 then
         if objectiveCompleted then
-            local perm = solver_perms[solver_perm_idx]
+            local perm = solver_perms[solver_perm_idx] or {}
             local order = {}
-            for i, lamp_pos in ipairs(perm) do
-                order[i] = get_lamp_letter(solver_lamps[lamp_pos].index)
+            for _, lamp_pos in ipairs(perm) do
+                local lamp = solver_lamps[lamp_pos]
+                if lamp then order[#order+1] = get_lamp_letter(lamp.index) end
             end
             windower.add_to_chat(200, 'Genie SOLVER: Solved! (order: ' .. table.concat(order, ' -> ') .. ')')
             solver_active = false
@@ -3500,7 +3508,7 @@ windower.register_event('prerender', function()
 
         if currentZone == 77 or debugmode then
             local player = windower.ffxi.get_player()
-            local playerpos = windower.ffxi.get_mob_by_index(player.index)
+            local playerpos = player and windower.ffxi.get_mob_by_index(player.index)
 
             if playerpos ~= nil then
                 if currentZone == 77 then
