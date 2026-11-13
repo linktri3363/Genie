@@ -5,7 +5,7 @@ Genie reads each floor's objective from chat and then automatically clears or as
 Is It Safe?
 Probably not.
 Install
-Copy the `Genie` folder into your Windower `addons` directory.
+Copy the `Genie` folder (containing `Genie.lua`) into your Windower `addons` directory.
 `//lua load Genie`.
 Genie activates when inside Nyzul Isle.
 ---
@@ -58,3 +58,5 @@ Command	Description
 ---
 Settings
 Saved per character to `data/genie_state_<name>.lua` (toggles + runner) and `data/settings.xml` (HUD position/colors). `rune_mode`, `autocertify`, and `debug` reset to defaults on load.
+These files are created automatically in the addon's `data/` folder the first time Genie loads or saves; nothing needs to be copied in.
+The NM DAT lookup reads the FFXI install path from Windower, so it works on non-default install locations.
